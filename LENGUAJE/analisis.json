@@ -1,0 +1,65 @@
+{
+    "productos": [
+      {
+        "id": 1,
+        "nombre": "Producto A",
+        "cantidad": 150,
+        "fecha": "2025-04-01"
+      },
+      {
+        "id": 2,
+        "nombre": "Producto B",
+        "cantidad": 120,
+        "fecha": "2025-04-02"
+      },
+      {
+        "id": 3,
+        "nombre": "Producto C",
+        "cantidad": 200,
+        "fecha": "2025-04-03"
+      },
+      {
+        "id": 4,
+        "nombre": "Producto D",
+        "cantidad": 180,
+        "fecha": "2025-04-04"
+      },
+      {
+        "id": 5,
+        "nombre": "Producto E",
+        "cantidad": 130,
+        "fecha": "2025-04-05"
+      },
+      {
+        "id": 6,
+        "nombre": "Producto F",
+        "cantidad": 160,
+        "fecha": "2025-04-06"
+      },
+      {
+        "id": 7,
+        "nombre": "Producto G",
+        "cantidad": 140,
+        "fecha": "2025-04-07"
+      },
+      {
+        "id": 8,
+        "nombre": "Producto H",
+        "cantidad": 110,
+        "fecha": "2025-04-08"
+      },
+      {
+        "id": 9,
+        "nombre": "Producto I",
+        "cantidad": 190,
+        "fecha": "2025-04-09"
+      },
+      {
+        "id": 10,
+        "nombre": "Producto J",
+        "cantidad": 170,
+        "fecha": "2025-04-10"
+      }
+    ]
+  }
+  

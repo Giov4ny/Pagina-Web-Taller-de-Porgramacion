@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario</title>
+    <link rel="stylesheet" href="index.css">
+    
+</head>
+<body>
+    <h1>Gestión de Inventario</h1>
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="inventario.html">Gestión de Inventarios</a>
+        <a href="proyectos.html">Seguimiento de Proyectos</a>
+        <a href="analisis.html">Análisis de Datos</a>
+        <a href="usuarios.html">Registro de Usuarios</a>
+        <a href="kanban.html">Gestión de Tareas</a>
+    </nav>
+
+    <div class="container">
+        <div class="module">
+            <h2>Inventario</h2>
+            <input type="text" id="productoNombre" placeholder="Nombre del producto">
+            <input type="number" id="productoCantidad" placeholder="Cantidad" min="1">
+            <button onclick="agregarProducto()">Agregar Producto</button>
+
+            <ul id="listaInventario"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", cargarInventario);
+
+
+        function agregarProducto() {
+            let nombre = document.getElementById("productoNombre").value;
+            let cantidad = document.getElementById("productoCantidad").value;
+
+            if (nombre.trim() !== "" && cantidad > 0) {
+                let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+                inventario.push({ nombre: nombre, cantidad: cantidad });
+                localStorage.setItem("inventario", JSON.stringify(inventario));
+
+                document.getElementById("productoNombre").value = "";
+                document.getElementById("productoCantidad").value = "";
+
+                mostrarInventario();
+            }
+        }
+
+
+        function mostrarInventario() {
+            let lista = document.getElementById("listaInventario");
+            lista.innerHTML = "";
+            let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+
+            inventario.forEach((producto, index) => {
+                let item = document.createElement("li");
+                item.innerHTML = `
+                    <span class="producto ${producto.editado ? 'producto-editado' : ''}">${producto.nombre} - ${producto.cantidad}</span>
+                    <button class="producto-editar" onclick="editarProducto(${index})">Editar</button>
+                    <button class="producto-eliminar" onclick="eliminarProducto(${index})">Eliminar</button>
+                `;
+                lista.appendChild(item);
+            });
+        }
+
+
+        function editarProducto(index) {
+            let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+            let producto = inventario[index];
+
+            let nuevoNombre = prompt("Editar nombre del producto:", producto.nombre);
+            let nuevaCantidad = prompt("Editar cantidad del producto:", producto.cantidad);
+
+            if (nuevoNombre !== null && nuevaCantidad !== null) {
+                if (nuevoNombre.trim() !== "" && nuevaCantidad > 0) {
+                    producto.nombre = nuevoNombre;
+                    producto.cantidad = nuevaCantidad;
+                    producto.editado = true;  
+                    localStorage.setItem("inventario", JSON.stringify(inventario));
+                    mostrarInventario();
+                }
+            }
+        }
+
+        function eliminarProducto(index) {
+            let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+            inventario.splice(index, 1);
+            localStorage.setItem("inventario", JSON.stringify(inventario));
+            mostrarInventario();
+        }
+
+       
+        function cargarInventario() {
+            mostrarInventario();
+        }
+    </script>
+</body>
+</html>

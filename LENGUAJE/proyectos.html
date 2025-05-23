@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Proyectos</title>
+    <link rel="stylesheet" href="index.css">
+    
+
+</head>
+<body>
+    <h1>Seguimiento de Proyectos</h1>
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="inventario.html">Gestión de Inventarios</a>
+        <a href="proyectos.html">Seguimiento de Proyectos</a>
+        <a href="analisis.html">Análisis de Datos</a>
+        <a href="usuarios.html">Registro de Usuarios</a>
+        <a href="kanban.html">Gestión de Tareas</a>
+    </nav>
+    <div class="container">
+        <div class="module">
+            <h2>Proyectos</h2>
+            <input type="text" id="proyecto" placeholder="Nombre del proyecto">
+            <button onclick="agregarProyecto()">Agregar</button>
+            <ul id="listaProyectos"></ul>
+        </div>
+
+     
+
+        <div class="module">
+            <h2>Tareas</h2>
+            <input type="text" id="tarea" placeholder="Nombre de la tarea">
+            <button onclick="agregarTarea()">Agregar</button>
+            <ul id="listaTareas"></ul>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", cargarDatos);
+
+        function agregarProyecto() {
+            let proyecto = document.getElementById("proyecto").value;
+            if (proyecto.trim() !== "") {
+                let proyectos = JSON.parse(localStorage.getItem("proyectos")) || [];
+                proyectos.push({ nombre: proyecto, completado: false });
+                localStorage.setItem("proyectos", JSON.stringify(proyectos));
+                document.getElementById("proyecto").value = "";
+                mostrarProyectos();
+            }
+        }
+
+        function mostrarProyectos() {
+            let lista = document.getElementById("listaProyectos");
+            lista.innerHTML = "";
+            let proyectos = JSON.parse(localStorage.getItem("proyectos")) || [];
+            proyectos.forEach((proyecto, index) => {
+                let item = document.createElement("li");
+                item.innerHTML = `
+                    <input type="checkbox" ${proyecto.completado ? "checked" : ""} onclick="marcarCompletado('proyectos', ${index})">
+                    ${proyecto.nombre} 
+                    <button onclick="eliminarElemento('proyectos', ${index})">Eliminar</button>`;
+                lista.appendChild(item);
+            });
+        }
+
+        
+
+        function agregarTarea() {
+            let tarea = document.getElementById("tarea").value;
+            if (tarea.trim() !== "") {
+                let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+                tareas.push({ nombre: tarea, completado: false });
+                localStorage.setItem("tareas", JSON.stringify(tareas));
+                document.getElementById("tarea").value = "";
+                mostrarTareas();
+            }
+        }
+
+        function mostrarTareas() {
+            let lista = document.getElementById("listaTareas");
+            lista.innerHTML = "";
+            let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+            tareas.forEach((tarea, index) => {
+                let item = document.createElement("li");
+                item.innerHTML = `
+                    <input type="checkbox" ${tarea.completado ? "checked" : ""} onclick="marcarCompletado('tareas', ${index})">
+                    <span class="${tarea.completado ? 'completada' : ''}">${tarea.nombre}</span>
+                    <button onclick="marcarComoTerminada(${index})">Marcar como terminada</button>
+                    <button onclick="eliminarElemento('tareas', ${index})">Eliminar</button>`;
+                lista.appendChild(item);
+            });
+        }
+
+       
+        function marcarCompletado(tipo, index) {
+            let datos = JSON.parse(localStorage.getItem(tipo)) || [];
+            datos[index].completado = !datos[index].completado;
+            localStorage.setItem(tipo, JSON.stringify(datos));
+            if (tipo === 'proyectos') mostrarProyectos();
+            else if (tipo === 'tareas') mostrarTareas();
+        }
+
+
+        function marcarComoTerminada(index) {
+            let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+            tareas[index].completado = true; 
+            localStorage.setItem("tareas", JSON.stringify(tareas));
+            mostrarTareas(); 
+        }
+
+   
+        function eliminarElemento(tipo, index) {
+            let datos = JSON.parse(localStorage.getItem(tipo)) || [];
+            datos.splice(index, 1);
+            localStorage.setItem(tipo, JSON.stringify(datos));
+            if (tipo === 'proyectos') mostrarProyectos();
+          
+            else if (tipo === 'tareas') mostrarTareas();
+        }
+
+
+        function cargarDatos() {
+            mostrarProyectos();
+        
+            mostrarTareas();
+        }
+    </script>
+</body>
+</html>

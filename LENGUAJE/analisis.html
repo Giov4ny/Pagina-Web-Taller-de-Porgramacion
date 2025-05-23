@@ -1,0 +1,295 @@
+<!DOCTYPE html>  
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Datos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css"/>
+    <style>
+        h2 {
+            text-align: center;
+            color: white;
+            background: #007bff;
+            padding: 5px;
+            margin: 0px 25%;
+        }
+
+        .filtros {
+            margin: 20px auto;
+            max-width: 600px;
+            color: #0056b3;
+        }
+
+        .filtros label,
+        .filtros input,
+        .filtros select,
+        .filtros button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .filtros button {
+            width: auto;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filtros button:hover {
+            background-color: #0056b3;
+        }
+
+        #resultado-comparacion {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            background-color: white;
+            margin: 0px 25%;
+            color: #0056b3;
+        }
+
+        .positivo {
+            color: green;
+        }
+
+        .negativo {
+            color: red;
+        }
+
+        .export-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .export-buttons button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color:#007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .export-buttons button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Análisis de Datos</h1>
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="inventario.html">Gestión de Inventarios</a>
+        <a href="proyectos.html">Seguimiento de Proyectos</a>
+        <a href="analisis.html">Análisis de Datos</a>
+        <a href="usuarios.html">Registro de Usuarios</a>
+        <a href="kanban.html">Gestión de Tareas</a>
+    </nav>
+
+    <div class="filtros">
+        <label for="filtro-fecha">Fecha mínima:</label>
+        <input type="date" id="filtro-fecha">
+
+        <label for="filtro-cantidad">Cantidad mínima:</label>
+        <input type="number" id="filtro-cantidad" min="0">
+
+        <button onclick="aplicarFiltros()">Aplicar Filtros</button>
+
+        <label for="comparar-productos">Comparar productos:</label>
+        <select id="comparar-productos" multiple size="5"></select>
+    </div>
+
+    <table id="tabla-productos" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Gráfico de Cantidades</h2>
+    <canvas id="grafico" width="400" height="200"></canvas>
+
+    <div id="resultado-comparacion"></div>
+
+   
+    <div class="export-buttons">
+        <button onclick="exportarComoImagen()">Exportar como Imagen</button>
+        <button onclick="exportarComoPDF()">Exportar como PDF</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        let productosOriginales = [];
+        let grafico;
+
+        fetch('analisis.json')
+            .then(response => response.json())
+            .then(data => {
+                productosOriginales = data.productos;
+                renderizar(productosOriginales);
+            })
+            .catch(error => console.error('Error cargando el archivo JSON:', error));
+
+        function renderizar(productos) {
+            const tbody = document.querySelector('#tabla-productos tbody');
+            const selectComparar = document.getElementById('comparar-productos');
+            tbody.innerHTML = '';
+            selectComparar.innerHTML = '';
+
+            const labels = [];
+            const cantidades = [];
+
+            productos.forEach(producto => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${producto.id}</td>
+                    <td>${producto.nombre}</td>
+                    <td>${producto.cantidad}</td>
+                    <td>${producto.fecha}</td>
+                `;
+                tbody.appendChild(row);
+
+                labels.push(producto.nombre);
+                cantidades.push(producto.cantidad);
+
+                const option = document.createElement('option');
+                option.value = producto.nombre;
+                option.textContent = producto.nombre;
+                selectComparar.appendChild(option);
+            });
+
+            actualizarGrafico(labels, cantidades);
+        }
+
+        function actualizarGrafico(labels, cantidades) {
+            if (grafico) {
+            grafico.destroy();
+              }
+
+    const productosParaDetalle = productosOriginales.filter(p => labels.includes(p.nombre));
+
+    grafico = new Chart(document.getElementById('grafico'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cantidad',
+                data: cantidades,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+           
+        }
+    });
+
+    configurarEventoClickBarras(grafico, productosParaDetalle);
+}
+
+        function aplicarFiltros() {
+            const fechaMin = document.getElementById('filtro-fecha').value;
+            const cantidadMin = parseInt(document.getElementById('filtro-cantidad').value) || 0;
+
+            const filtrados = productosOriginales.filter(producto => {
+                const cumpleCantidad = producto.cantidad >= cantidadMin;
+                const cumpleFecha = !fechaMin || new Date(producto.fecha) >= new Date(fechaMin);
+                return cumpleCantidad && cumpleFecha;
+            });
+
+            renderizar(filtrados);
+            document.getElementById('resultado-comparacion').innerHTML = '';
+        }
+
+        document.getElementById('comparar-productos').addEventListener('change', () => {
+            const seleccionados = Array.from(document.getElementById('comparar-productos').selectedOptions).map(op => op.value);
+            const resultado = document.getElementById('resultado-comparacion');
+
+            const productosSeleccionados = productosOriginales.filter(p => seleccionados.includes(p.nombre));
+
+            const labels = productosSeleccionados.map(p => p.nombre);
+            const cantidades = productosSeleccionados.map(p => p.cantidad);
+
+            actualizarGrafico(labels, cantidades);
+
+            if (productosSeleccionados.length === 2) {
+                const [p1, p2] = productosSeleccionados;
+                const diferencia = p2.cantidad - p1.cantidad;
+                const porcentaje = ((diferencia) / p1.cantidad * 100).toFixed(2);
+
+                const clase = porcentaje >= 0 ? 'positivo' : 'negativo';
+
+                resultado.innerHTML = `
+                    Comparando <strong>${p1.nombre}</strong> y <strong>${p2.nombre}</strong>:<br>
+                    Diferencia: <strong class="${clase}">${diferencia}</strong> unidades<br>
+                    Variación: <strong class="${clase}">${porcentaje}%</strong> respecto a ${p1.nombre}
+                `;
+            } else {
+                resultado.innerHTML = '';
+            }
+        });
+
+        function exportarComoImagen() {
+            const canvas = document.getElementById('grafico');
+            const link = document.createElement('a');
+            link.download = 'grafico.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        async function exportarComoPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const canvas = document.getElementById('grafico');
+            const imgData = canvas.toDataURL('image/png');
+
+            doc.text("Gráfico de Cantidades", 10, 10);
+            doc.addImage(imgData, 'PNG', 10, 20, 180, 100);
+            doc.save('grafico.pdf');
+        }
+        const detalleProducto = document.createElement('div');
+            detalleProducto.id = 'detalle-producto';
+            detalleProducto.style.textAlign = 'center';
+            detalleProducto.style.marginTop = '20px';
+            detalleProducto.style.color = '#343a40';
+            document.body.appendChild(detalleProducto);
+
+        function configurarEventoClickBarras(chart, productos) {
+             chart.options.onClick = (event, elements) => {
+                  if (elements.length > 0) {
+            const index = elements[0].index;
+            const producto = productos[index];
+
+            detalleProducto.innerHTML = `
+                <h3>Detalle del producto</h3>
+                <p><strong>Nombre:</strong> ${producto.nombre}</p>
+                <p><strong>Cantidad:</strong> ${producto.cantidad}</p>
+                <p><strong>Fecha:</strong> ${producto.fecha}</p>
+            `;
+        }
+    };
+    chart.update();
+}
+    </script>
+</body>
+</html>
